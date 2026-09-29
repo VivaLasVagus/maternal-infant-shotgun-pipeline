@@ -47,3 +47,10 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Host genome index files (too large for GitHub)
+data/raw/host_index/
+*.bt2
+*.zip
+*.dict
+*.json
