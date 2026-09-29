@@ -5,6 +5,88 @@ This repository contains an end‑to‑end shotgun metagenomics pipeline focused
 
 ---
 
+## Getting Started
+This pipeline is designed to be fully reproducible and easy to run on any system with standard microbiome analysis tools installed. 
+Follow the steps below to set up your environment and begin processing maternal–infant shotgun metagenomics data.
+
+1. Install Required Tools
+You will need the following software installed and available in your PATH:
+
+Bowtie2 (host‑read removal)
+
+FastQC (quality control)
+
+MetaPhlAn 4 (taxonomic profiling)
+
+HUMAnN 3 (functional profiling)
+
+R ≥ 4.2 with tidyverse, phyloseq, and modeling packages
+
+Python ≥ 3.8 (for MetaPhlAn/HUMAnN dependencies)
+
+Environment setup is handled in:
+
+scripts/00_environment_setup.R
+This script installs required R packages and checks for external tools.
+
+2. Prepare Input Data
+Place raw FASTQ files and metadata in:
+
+data/raw/
+This folder is intentionally excluded from version control.
+
+3. Download Host Genome Index (GRCh38)
+Bowtie2 host‑read removal requires the GRCh38_noalt index.
+Download and organize it by running:
+
+scripts/01_qc_host_removal.R
+This script retrieves the Bowtie2 index files and stores them in:
+
+data/raw/host_index/
+
+These files are large and are not committed to the repository.
+
+4. Run the Pipeline
+Execute each step in order:
+
+scripts/01_qc_host_removal.R
+scripts/02_metaphlan_taxonomy.R
+scripts/03_humann_functional.R
+scripts/04_merge_tables.R
+scripts/05_compositional_filtering.R
+scripts/06_longitudinal_modeling.R
+scripts/07_visualizations.R
+
+Intermediate files will be saved in:
+
+data/intermediate/
+Final outputs will be saved in:
+
+data/processed/
+results/
+
+5. Review Outputs
+The pipeline generates:
+
+- taxonomic tables
+
+- functional pathway tables
+
+- host‑removed FASTQs
+
+- longitudinal infant gut trajectories
+
+- maternal → infant transfer summaries
+
+- visualizations (PCoA, heatmaps, temporal plots)
+
+All figures and tables are stored in:
+
+Code
+results/
+
+---
+
 ## Project Overview
 
 This pipeline is designed for maternal–infant shotgun metagenomics datasets, including:
@@ -100,6 +182,32 @@ All outputs are saved in results/.
 - Seed setting for stochastic steps  
 - Session information saved per run  
 - Modular scripts for easy reuse and extension  
+
+---
+
+## Host Genome Index (GRCh38)
+
+This pipeline uses the GRCh38_noalt human reference genome for host‑read removal during QC. Because Bowtie2 index files are extremely large (often >100MB each), they are not stored in this repository.
+
+Instead, the workflow includes:
+
+- a dedicated script for downloading and organizing the index
+
+- clear instructions for users to obtain the required files
+
+- .gitignore rules to prevent committing large binaries
+
+## Download Instructions
+
+Run the following script to download and prepare the host genome index:
+
+scripts/01_qc_host_removal.R
+
+This script retrieves the GRCh38_noalt Bowtie2 index files and places them in:
+
+data/raw/host_index/
+
+These files are required for the host‑read removal step but are intentionally excluded from version control.
 
 ---
 
