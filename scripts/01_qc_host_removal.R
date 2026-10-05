@@ -31,7 +31,7 @@ dir.create(host_removed_dir, showWarnings = FALSE, recursive = TRUE)
 ###############################################
 fastqc_path <- "fastqc"        # assumes FastQC in PATH
 bowtie2_path <- "bowtie2"      # assumes Bowtie2 in PATH
-host_index <- "data/raw/host_index/GRCh38_noalt_as" # human genome index
+host_index <- "data/raw/host_index/hg38/GRCh38_noalt_as" # human genome index
 
 ###############################################
 # 1. Identify FASTQ files
