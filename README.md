@@ -1,223 +1,153 @@
-# Maternal–Infant Shotgun Metagenomics Pipeline  
-Reproducible workflow for maternal–infant microbiome analysis using MetaPhlAn + HUMAnN
+# Microbiome Profiling & Analysis Project
 
-This repository contains an end‑to‑end shotgun metagenomics pipeline focused on maternal–infant microbiome development, microbial transfer, and early‑life health insights. The workflow includes host‑read removal, taxonomic profiling (MetaPhlAn), functional pathway analysis (HUMAnN), compositional filtering, longitudinal modeling, and reproducible documentation.
+This repository contains a fully R‑based microbiome analysis workflow built using **curatedMetagenomicData**, a large, high‑quality collection of 
+MetaPhlAn3 and HUMAnN3 outputs from human microbiome studies. This project focuses on **infant gut microbiome analysis**, 
+beginning with a cross‑sectional cohort and later expanding to a disease‑focused cohort.
 
----
-
-## Getting Started
-This pipeline is designed to be fully reproducible and easy to run on any system with standard microbiome analysis tools installed. 
-Follow the steps below to set up your environment and begin processing maternal–infant shotgun metagenomics data.
-
-1. Install Required Tools
-You will need the following software installed and available in your PATH:
-
-Bowtie2 (host‑read removal)
-
-FastQC (quality control)
-
-MetaPhlAn 4 (taxonomic profiling)
-
-HUMAnN 3 (functional profiling)
-
-R ≥ 4.2 with tidyverse, phyloseq, and modeling packages
-
-Python ≥ 3.8 (for MetaPhlAn/HUMAnN dependencies)
-
-Environment setup is handled in:
-
-scripts/00_environment_setup.R
-This script installs required R packages and checks for external tools.
-
-2. Prepare Input Data
-Place raw FASTQ files and metadata in:
-
-data/raw/
-This folder is intentionally excluded from version control.
-
-3. Download Host Genome Index (GRCh38)
-Bowtie2 host‑read removal requires the GRCh38_noalt index.
-Download and organize it by running:
-
-scripts/01_qc_host_removal.R
-This script retrieves the Bowtie2 index files and stores them in:
-
-data/raw/host_index/
-
-These files are large and are not committed to the repository.
-
-4. Run the Pipeline
-Execute each step in order:
-
-scripts/01_qc_host_removal.R
-scripts/02_metaphlan_taxonomy.R
-scripts/03_humann_functional.R
-scripts/04_merge_tables.R
-scripts/05_compositional_filtering.R
-scripts/06_longitudinal_modeling.R
-scripts/07_visualizations.R
-
-Intermediate files will be saved in:
-
-data/intermediate/
-Final outputs will be saved in:
-
-data/processed/
-results/
-
-5. Review Outputs
-The pipeline generates:
-
-- taxonomic tables
-
-- functional pathway tables
-
-- host‑removed FASTQs
-
-- longitudinal infant gut trajectories
-
-- maternal → infant transfer summaries
-
-- visualizations (PCoA, heatmaps, temporal plots)
-
-All figures and tables are stored in:
-
-Code
-results/
-
----
-
-## Project Overview
-
-This pipeline is designed for maternal–infant shotgun metagenomics datasets, including:
-
-- **Host‑read removal** (Bowtie2)
-- **Taxonomic profiling** (MetaPhlAn)
-- **Functional pathway analysis** (HUMAnN)
-- **Compositional statistics** (CLR/ALR/ILR)
-- **Longitudinal modeling** of infant gut development
-- **Maternal → infant microbial transfer analysis**
-- **Reproducible workflow structure** with version control
-
-The goal is to provide a transparent, modular, and scientifically rigorous workflow aligned with early‑life microbiome research.
+No command‑line tools, preprocessing pipelines, or Ubuntu environments are required. 
+All taxonomic and functional profiles are sourced directly from curatedMetagenomicData and analyzed in R using Quarto notebooks.
 
 ---
 
 ## Repository Structure
 
-maternal-infant-shotgun-pipeline/
-│
-├── data/
-│   ├── raw/                # Raw FASTQ, metadata (not committed)
-│   ├── intermediate/       # Host-removed reads, HUMAnN intermediates
-│   └── processed/          # Final tables, merged outputs
-│
-├── scripts/
-│   ├── 00_environment_setup.R
-│   ├── 01_qc_host_removal.R
-│   ├── 02_metaphlan_taxonomy.R
-│   ├── 03_humann_functional.R
-│   ├── 04_merge_tables.R
-│   ├── 05_compositional_filtering.R
-│   ├── 06_longitudinal_modeling.R
-│   └── 07_visualizations.R
-│
-├── results/
-│   ├── figures/
-│   └── tables/
-│
-├── docs/
-│   ├── workflow_diagram.png
-│   └── notes/
-│
-└── README.md
+maternal-infant-shotgun-pipeline
+
+data/
+processed/    # MetaPhlAn3 + HUMAnN3 profiles loaded from curatedMetagenomicData
+
+docs/
+project_log.qmd      # Decision journal + pivot documentation
+project_plan.qmd     # Project roadmap
+
+notebooks/
+02_infant_gut_cross_sectional.qmd   # Main analysis notebook (Project B)
+03_infant_gut_disease.qmd           # Future analysis notebook (Project C)
+
+scripts/
+analysis/            # R functions for diversity, ordination, visualization
+
+results/
+figures/             # Plots generated during analysis
+tables/              # Summary tables and exports
+
 
 ---
 
-## Tools & Methods
+## Project Goals
 
-### **Quality Control & Host Removal**
-- FastQC  
-- Bowtie2  
-- KneadData (optional)
+- Analyze infant gut microbiome composition using MetaPhlAn3 profiles  
+- Analyze functional pathways using HUMAnN3 outputs  
+- Compare delivery mode, feeding type, and antibiotic exposure  
+- Produce publication‑quality figures and tables  
+- Build a portfolio‑ready microbiome project aligned with Tiny Health  
+- Expand to a disease‑focused infant cohort 
 
-### **Taxonomic Profiling**
-- **MetaPhlAn 4**  
-  - high‑resolution clade profiling  
-  - supports maternal–infant microbial transfer analysis
+---
 
-### **Functional Profiling**
-- **HUMAnN 3**  
-  - UniRef → pathway reconstruction  
-  - stratified outputs for maternal vs infant contributions
+## Project Evolution
 
-### **Statistics & Modeling**
+This project originally included:
+
+- FastQC / MultiQC
+- Trimming
+- Host removal
+- Environment setup logs
+- Intermediate preprocessing scripts
+
+After encountering environment instability and recognizing that curatedMetagenomicData provides clean, ready‑to‑analyze MetaPhlAn3/HUMAnN3 outputs, the project pivoted toward a fully R‑based workflow.
+
+
+All deprecated preprocessing folders and scripts were removed during the cleanup.
+
+The full pivot reasoning is documented in:
+
+docs/project_log.qmd
+
+---
+
+## Tools & Technologies
+
+### **Data Source**
+- curatedMetagenomicData (MetaPhlAn3 + HUMAnN3 outputs)
+
+### **Analysis**
+- R / RStudio  
 - tidyverse  
 - phyloseq  
-- compositional transforms (CLR/ALR/ILR)  
-- mixed‑effects models  
-- longitudinal trajectory visualization  
+- mia / TreeSummarizedExperiment  
+- ggplot2  
+- vegan  
+
+### **Documentation**
+- Quarto (.qmd)
+- Markdown
 
 ---
 
-## Outputs
+## Workflow Overview
 
-The pipeline generates:
+### **1. Load infant gut cohort from curatedMetagenomicData**
+Includes:
+- Species-level relative abundance (MetaPhlAn3)  
+- Pathway abundance + coverage (HUMAnN3)  
+- Rich metadata (delivery mode, feeding type, antibiotics)
 
-- taxonomic abundance tables  
-- functional pathway tables  
-- host‑removed FASTQ files  
-- longitudinal infant gut trajectories  
-- maternal → infant transfer summaries  
-- heatmaps, PCoA plots, and temporal visualizations  
+### **2. Convert to phyloseq / TSE objects**
+For ecological and statistical analysis.
 
-All outputs are saved in results/.
+### **3. Perform downstream analysis**
+- Alpha diversity  
+- Beta diversity  
+- Taxonomic composition  
+- Functional pathway analysis  
+- Early-life factor comparisons  
+
+### **4. Generate publication-quality figures**
+Saved to `results/figures`.
+
+### **5. Document everything**
+Project log + Quarto notebooks.
 
 ---
 
-## Reproducibility
+## Current Status
 
-- Version‑controlled scripts  
-- Parameter tracking  
-- Seed setting for stochastic steps  
-- Session information saved per run  
-- Modular scripts for easy reuse and extension  
+- Repo cleaned and reorganized  
+- Pivot completed  
+- curatedMetagenomicData selected as data source  
+- Project (cross‑sectional infant gut) ready to begin  
 
 ---
 
-## Host Genome Index (GRCh38)
+## Next Steps
 
-This pipeline uses the GRCh38_noalt human reference genome for host‑read removal during QC. Because Bowtie2 index files are extremely large (often >100MB each), they are not stored in this repository.
-
-Instead, the workflow includes:
-
-- a dedicated script for downloading and organizing the index
-
-- clear instructions for users to obtain the required files
-
-- .gitignore rules to prevent committing large binaries
-
-## Download Instructions
-
-Run the following script to download and prepare the host genome index:
-
-scripts/01_qc_host_removal.R
-
-This script retrieves the GRCh38_noalt Bowtie2 index files and places them in:
-
-data/raw/host_index/
-
-These files are required for the host‑read removal step but are intentionally excluded from version control.
+- Load infant gut cohort  
+- Build analysis notebook  
+- Generate figures  
+- Interpret results  
+- Begin stretch project (disease-focused infant gut)
 
 ---
 
 ## Background
 
-I’m an early-career microbiome data scientist focusing on maternal–infant health, early‑life microbial development, and gut–brain interactions. This pipeline reflects my ongoing work to build transparent, reproducible workflows aligned with real‑world maternal–infant microbiome datasets.
+Hello and thanks for being here!
+
+I’m an early-career microbiome data scientist focusing on maternal–infant health, early‑life microbial development, and gut–brain interactions. 
+This project represents the first major step in building my maternal–infant microbiome portfolio.
+
+I did not start on this path with deep knowledge and expertise in biological or microbiome functionality. 
+I found my way here while exploring the parasympathetic nervous system and the gut-brain connection, as it was a 
+topic of interest in my studies within Developmental Psychology. Now that I've started research in this area, it's captivated me and this 
+is the start of what I hope is a long journey in this field.
+
+AI‑use disclosure: I use Copilot as a learning and productivity tool to explore concepts quickly, write scripts, and accelerate my understanding of microbiome analysis.
 
 ---
 
-## Contact
+## Contact/Portfolio
 
+**GitHub:** VivaLasVagus
 **LinkedIn:** www.linkedin.com/in/elizabeth-thatcher-adams-986036250
 **Email:** Elizabeth.Thatcher@live.com  
