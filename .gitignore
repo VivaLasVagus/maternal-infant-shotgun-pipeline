@@ -25,7 +25,7 @@
 vignettes/*.html
 vignettes/*.pdf
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
+# OAuth2 token
 .httr-oauth
 
 # knitr and R markdown default cache directories
@@ -48,9 +48,33 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# Host genome index files (too large for GitHub)
-data/raw/host_index/
+###############################################
+# BIOINFORMATICS PIPELINE PROTECTIONS
+###############################################
+
+# FASTQ files (raw + clean)
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+
+# Host genome index files (Bowtie2)
 *.bt2
-*.zip
+*.bt2l
 *.dict
 *.json
+
+# MetaPhlAn / HUMAnN databases
+*.tar
+*.bowtie2
+*.biom
+
+# Large compressed archives
+*.zip
+*.gz
+*.bz2
+*.xz
+
+# WSL2 temporary directories
+tmp/
+temp/
