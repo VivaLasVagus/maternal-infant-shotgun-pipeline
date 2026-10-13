@@ -111,22 +111,39 @@ Project log + Quarto notebooks.
 
 ---
 
+## Dataset Choice  
+
+This project uses the BackhedF_2015 infant gut shotgun metagenomics dataset, accessed through the curatedMetagenomicData R package. 
+Backhed et al. (2015) is a foundational early‑life microbiome study containing well‑annotated stool samples from infants at birth, 4 months, 
+and 12 months. Metadata includes delivery mode, feeding practice, antibiotic exposure, and age, making it well‑suited for cross‑sectional 
+ecological analysis.
+
+The dataset provides species‑level relative abundances and functional profiles generated using MetaPhlAn3 and HUMAnN3.
+
+---
+
 ## Current Status
 
 - Repo cleaned and reorganized  
 - Pivot completed  
 - curatedMetagenomicData selected as data source  
-- Project (cross‑sectional infant gut) ready to begin  
+- Project (cross‑sectional infant gut) ready to begin
+- Loaded infant gut cohort (BackhedF_2015)
+- Completed Alpha Diversity modeling and plotting
 
 ---
 
 ## Next Steps
 
-- Load infant gut cohort  
-- Build analysis notebook  
-- Generate figures  
-- Interpret results  
-- Begin stretch project (disease-focused infant gut)
+- Complete analysis of alpha diversity results
+- Create narrative document with alpha diversity interpretation
+- Begin beta diversity modeling, analysis, and interpretation
+- Generate ordination plots (PCoA using Bray–Curtis)
+- Run PERMANOVA tests for delivery mode, feeding practice, and antibiotics
+- Begin taxonomic composition analysis (top taxa by timepoint + metadata group)
+- Begin functional profiling analysis (HUMAnN pathways)
+- Start drafting beta diversity + composition results
+- Update project plan with new milestones as needed
 
 ---
 

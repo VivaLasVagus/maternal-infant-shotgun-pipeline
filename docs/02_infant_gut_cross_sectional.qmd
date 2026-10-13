@@ -1,0 +1,532 @@
+---
+title: "Infant Gut Microbiome – Cross-Sectional Dataset Selection"
+author: "Elizabeth Thatcher-Adams"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+editor: visual
+execute:
+  enabled: true
+  echo: true
+  warning: false
+  message: false
+  error: true
+---
+
+# 1. Load curatedMetagenomicData
+
+```{r}
+
+library(curatedMetagenomicData)
+library(dplyr)
+
+# Filter for infant stool samples
+infant_samples <- sampleMetadata |>
+  filter(body_site == "stool",
+         age < 1)
+
+# Show unique studies that contain infant stool samples
+infant_titles <- infant_samples |>
+  select(study_name, body_site, age) |>
+  distinct()
+
+infant_titles
+```
+
+```{r}
+
+# Pull all infant stool datasets
+infant_data <- curatedMetagenomicData(
+  infant_titles$study_name,
+  dryrun = TRUE
+)
+
+infant_data
+```
+
+```{r}
+
+library(purrr)
+
+infant_dryrun <- map(
+  infant_titles$study_name,
+  ~ curatedMetagenomicData(.x, dryrun = TRUE)
+)
+
+names(infant_dryrun)
+
+infant_dryrun[[2]]
+```
+
+```{r}
+
+best_dataset <- "BackhedF_2015"
+
+infant_data <- curatedMetagenomicData(best_dataset, dryrun = FALSE)
+```
+
+```{r}
+
+infant_data
+```
+
+```{r}
+
+infant_data[[1]]
+```
+
+# 2. Tidy & Join Metadata
+
+```{r}
+
+rel_abund <- infant_data[["2021-10-14.BackhedF_2015.relative_abundance"]]
+
+meta <- as.data.frame(colData(rel_abund)) |>
+  tibble::rownames_to_column("sample_id")
+
+abund_df <- as.data.frame(assay(rel_abund, "relative_abundance")) |>
+  tibble::rownames_to_column("feature") |>
+  pivot_longer(
+    cols = -feature,
+    names_to = "sample_id",
+    values_to = "abundance"
+  )
+
+infant_tidy <- abund_df |>
+  left_join(meta, by = "sample_id")
+```
+
+# 3. Metadata Exploration
+
+```{r}
+
+# Preview of first few rows & column header list
+
+head(meta)
+
+names(meta)
+```
+
+```{r}
+
+# Count of samples by delivery mode
+
+meta |> 
+  count(born_method) |> 
+  arrange(desc(n))
+```
+
+```{r}
+
+# Count of samples by feeding type
+
+meta |> 
+  count(feeding_practice) |> 
+  arrange(desc(n))
+```
+
+```{r}
+
+# Count of samples by antibiotic exposure
+
+meta |> 
+  count(antibiotics_current_use) |> 
+  arrange(desc(n))
+```
+
+```{r}
+
+# Age distribution 
+
+meta |> 
+  summarize(
+    min_age = min(age, na.rm = TRUE),
+    max_age = max(age, na.rm = TRUE),
+    mean_age = mean(age, na.rm = TRUE)
+  )
+```
+
+```{r}
+
+# Number of samples per subject
+
+meta |> 
+  count(subject_id) |> 
+  arrange(desc(n))
+```
+
+```{r}
+
+# Total number of samples
+
+nrow(meta)
+```
+
+```{r}
+
+# Filter to infants only
+
+meta_infants <- meta |>
+  filter(age_category != "adult") |>
+  filter(!grepl("_mo$", subject_id))
+```
+
+```{r}
+
+# Number of samples in filtered table
+
+nrow(meta_infants)
+```
+
+# 4. Alpha Diversity
+
+```{r}
+
+# Filter abundance table to infant samples only
+
+infant_abund <- infant_tidy |>
+  filter(sample_id %in% meta_infants$sample_id)
+```
+
+```{r}
+
+# Alpha diversity (AD) metrics
+
+library(vegan)
+library(dplyr)
+
+alpha_df <- infant_abund |>
+  group_by(sample_id) |>
+  summarize(
+    shannon = diversity(abundance, index = "shannon"),
+    simpson = diversity(abundance, index = "simpson"),
+    richness = n_distinct(feature[abundance > 0])
+  ) |>
+  left_join(meta_infants, by = "sample_id")
+```
+
+```{r}
+
+# Dataframe preview
+
+head(alpha_df)
+```
+
+```{r}
+
+# AD by delivery mode
+
+alpha_df |>
+  filter(!is.na(born_method)) |>
+  group_by(born_method) |>
+  summarize(
+    mean_shannon = mean(shannon),
+    mean_simpson = mean(simpson),
+    mean_richness = mean(richness),
+    n = n()
+  )
+```
+
+```{r}
+
+# AD by feeding method
+
+alpha_df |>
+  filter(!is.na(feeding_practice)) |>
+  group_by(feeding_practice) |>
+  summarize(
+    mean_shannon = mean(shannon),
+    mean_simpson = mean(simpson),
+    mean_richness = mean(richness),
+    n = n()
+  )
+```
+
+```{r}
+
+# AD by antibiotics exposure
+
+alpha_df |>
+  filter(!is.na(antibiotics_current_use)) |>
+  group_by(antibiotics_current_use) |>
+  summarize(
+    mean_shannon = mean(shannon),
+    mean_simpson = mean(simpson),
+    mean_richness = mean(richness),
+    n = n()
+  )
+```
+
+```{r}
+
+# Plot shannon diversity (SD) by delivery mode
+
+library(ggplot2)
+
+alpha_df |>
+  filter(!is.na(born_method)) |>
+  ggplot(aes(x = born_method, y = shannon, fill = born_method)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Shannon Diversity by Delivery Mode",
+    x = "Delivery Mode",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+ggsave("results/figures/alpha_shannon_delivery.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Plot SD by feeding practice
+
+alpha_df |>
+  filter(!is.na(feeding_practice)) |>
+  ggplot(aes(x = feeding_practice, y = shannon, fill = feeding_practice)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Shannon Diversity by Feeding Practice",
+    x = "Feeding Practice",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("results/figures/alpha_shannon_feeding.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Plot SD by antibiotic exposure
+
+alpha_df |>
+  filter(!is.na(antibiotics_current_use)) |>
+  ggplot(aes(x = antibiotics_current_use, y = shannon, fill = antibiotics_current_use)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(
+    title = "Shannon Diversity by Antibiotic Exposure",
+    x = "Antibiotics (Current Use)",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+ggsave("results/figures/alpha_shannon_antibiotics.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Plot richness by delivery mode
+
+alpha_df |>
+  filter(!is.na(born_method)) |>
+  ggplot(aes(x = born_method, y = richness, fill = born_method)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Observed Richness by Delivery Mode",
+    x = "Delivery Mode",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+ggsave("results/figures/alpha_richness_delivery.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Plot richness by feeding practice
+
+alpha_df |>
+  filter(!is.na(feeding_practice)) |>
+  ggplot(aes(x = feeding_practice, y = richness, fill = feeding_practice)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Observed Richness by Feeding Practice",
+    x = "Feeding Practice",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("results/figures/alpha_richness_feeding.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Plot richness by antibiotic exposure
+
+alpha_df |>
+  filter(!is.na(antibiotics_current_use)) |>
+  ggplot(aes(x = antibiotics_current_use, y = richness, fill = antibiotics_current_use)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(
+    title = "Observed Richness by Antibiotic Exposure",
+    x = "Antibiotics (Current Use)",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none")
+
+ggsave("results/figures/alpha_richness_antibiotics.png", width = 7, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Extract timepoints
+
+alpha_df <- alpha_df |>
+  mutate(
+    timepoint = case_when(
+      grepl("_B$", sample_id) ~ "Birth",
+      grepl("_4M$", sample_id) ~ "4 Months",
+      grepl("_12M$", sample_id) ~ "12 Months",
+      TRUE ~ NA_character_
+    )
+  )
+
+alpha_df |> count(timepoint)
+```
+
+```{r}
+
+# SD by delivery mode at each timepoint
+
+alpha_df |>
+  filter(!is.na(born_method), !is.na(timepoint)) |>
+  ggplot(aes(x = born_method, y = shannon, fill = born_method)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Shannon Diversity by Delivery Mode Across Timepoints",
+    x = "Delivery Mode",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave("results/figures/shannon_delivery_timepoint.png", width = 9, height = 5, dpi = 300)
+```
+
+```{r}
+
+# SD by feeding practice at each timepoint
+
+alpha_df |>
+  filter(!is.na(feeding_practice), !is.na(timepoint)) |>
+  ggplot(aes(x = feeding_practice, y = shannon, fill = feeding_practice)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Shannon Diversity by Feeding Practice Across Timepoints",
+    x = "Feeding Practice",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("results/figures/shannon_feeding_timepoint.png", width = 12, height = 6, dpi = 300)
+```
+
+```{r}
+
+# SD by antibiotic exposure at each timepoint
+
+alpha_df |>
+  filter(!is.na(antibiotics_current_use), !is.na(timepoint)) |>
+  ggplot(aes(x = antibiotics_current_use, y = shannon, fill = antibiotics_current_use)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(
+    title = "Shannon Diversity by Antibiotic Exposure Across Timepoints",
+    x = "Antibiotics (Current Use)",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave("results/figures/shannon_antibiotics_timepoint.png", width = 9, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Richness by delivery mode at each timepoint
+
+alpha_df |>
+  filter(!is.na(born_method), !is.na(timepoint)) |>
+  ggplot(aes(x = born_method, y = richness, fill = born_method)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Observed Richness by Delivery Mode Across Timepoints",
+    x = "Delivery Mode",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave("results/figures/richness_delivery_timepoint.png", width = 9, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Richness by feeding practice at each timepoint
+
+alpha_df |>
+  filter(!is.na(feeding_practice), !is.na(timepoint)) |>
+  ggplot(aes(x = feeding_practice, y = richness, fill = feeding_practice)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Set3") +
+  labs(
+    title = "Observed Richness by Feeding Practice Across Timepoints",
+    x = "Feeding Practice",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("results/figures/richness_feeding_timepoint.png", width = 9, height = 5, dpi = 300)
+```
+
+```{r}
+
+# Richness by antibiotic exposure at each timepoint
+
+alpha_df |>
+  filter(!is.na(antibiotics_current_use), !is.na(timepoint)) |>
+  ggplot(aes(x = antibiotics_current_use, y = richness, fill = antibiotics_current_use)) +
+  geom_boxplot(alpha = 0.8) +
+  geom_jitter(width = 0.15, alpha = 0.3) +
+  facet_wrap(~ timepoint) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(
+    title = "Observed Richness by Antibiotic Exposure Across Timepoints",
+    x = "Antibiotics (Current Use)",
+    y = "Observed Richness"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave("results/figures/richness_antibiotics_timepoint.png", width = 9, height = 5, dpi = 300)
+```

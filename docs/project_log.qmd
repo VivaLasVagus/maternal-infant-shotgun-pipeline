@@ -1,0 +1,136 @@
+---
+title: "Project Journal"
+author: "Elizabeth Thatcher-Adams"
+format: html
+editor: visual
+---
+
+# Overview
+
+This notebook documents the full development arc of the microbiome analysis project, including initial preprocessing attempts, roadblocks encountered, the decision to pivot, and the new profiling/analysis direction. It serves as a transparent record of reasoning, environment changes, and project structure evolution.
+
+# 1. Project Background
+
+## 1.1 Dataset
+
+This project uses **curatedMetagenomicData**, a large, high‑quality collection of human microbiome datasets processed using MetaPhlAn3 (taxonomic profiling) and HUMAnN3 (functional profiling). All data is accessed directly in R, with no preprocessing or command‑line tools required.
+
+## 1.2 Original Goals
+
+The project originally aimed to build a full preprocessing pipeline (QC, trimming, host removal, environment setup). After encountering environment instability, the workflow pivoted toward a profiling‑first approach using curatedMetagenomicData.
+
+## 1.3 Updated Pipeline Plan
+
+The project now focuses on: - Loading MetaPhlAn3 + HUMAnN3 outputs directly from curatedMetagenomicData\
+- Performing downstream ecological and functional analysis in R\
+- Building multiple infant gut microbiome projects (cross‑sectional + disease-focused)
+
+# 2. Preprocessing Phase Summary
+
+## 2.1 What Was Attempted
+
+Summaries of: - QC reports generated\
+- Host removal setup\
+- Environment configuration\
+- Initial R scripts created
+
+## 2.2 What Worked
+
+- Folder structure was established.\
+- QC reports were successfully generated.\
+- Environment setup was partially documented.
+
+## 2.3 What Didn’t Work
+
+- Host removal pipeline stalled due to environment conflicts.\
+- Some preprocessing steps became redundant after pivoting to profiling-first tools.\
+- R scripts became outdated relative to the new direction.
+
+## 2.4 Lessons Learned
+
+- Preprocessing pipelines are heavy and brittle without stable environments.\
+- Profiling-first workflows (MetaPhlAn, HUMAnN) reduce complexity.\
+- Documentation must evolve with the project.
+
+# 3. Pivot Decision
+
+## 3.1 Why Pivot
+
+The original pipeline required Ubuntu, WSL2, micromamba, and multiple command‑line tools. After environment failures and recognizing that curatedMetagenomicData provides clean, ready‑to‑analyze MetaPhlAn3/HUMAnN3 outputs, the project pivoted to a fully R‑based workflow.
+
+## 3.2 New Pipeline Direction
+
+- Use curatedMetagenomicData as the data source\
+- Begin analysis directly from taxonomic and functional profiles\
+- Focus on infant gut microbiome (Project B)\
+- Expand to disease-focused infant cohorts (Project C)\
+- Use Quarto notebooks for documentation and reproducibility
+
+# 4. Repository Cleanup Log
+
+## 4.1 Deleted Items
+
+- All preprocessing scripts\
+- Environment setup files\
+- QC folders\
+- Host removal folders\
+- Ubuntu-dependent components
+
+## 4.2 Updated Structure
+
+The repository now reflects a clean, R‑based workflow centered on curatedMetagenomicData.
+
+data/ processed/
+
+docs/ project_plan.qmd project_log.qmd
+
+scripts/ (new profiling scripts to be added)
+
+results/ figures/ tables/
+
+# 5. Next Steps
+
+## 5.1 Immediate Tasks
+
+- Finalize updated README\
+- Write updated project plan\
+- Create first analysis notebook for Project B\
+- Load infant gut cohort from curatedMetagenomicData\
+- Convert taxonomic and functional profiles into phyloseq/TSE objects
+
+## 5.2 Analysis Tasks
+
+- Explore metadata (delivery mode, feeding type, antibiotics)\
+- Alpha diversity analysis\
+- Beta diversity analysis\
+- Taxonomic composition visualization\
+- Functional pathway analysis (HUMAnN3 outputs)\
+- Early‑life factor comparisons\
+- Interpretation and narrative building
+
+## 5.3 Deliverables
+
+- Clean, R‑based, reproducible pipeline\
+- Portfolio‑ready documentation\
+- Publication‑style figures\
+- Final report or dashboard summarizing Project B\
+- Foundation for Project C (disease‑focused infant cohort)
+
+# 6. Running Notes
+
+**2026-10-06 — Repo Cleanup**\
+- Removed all preprocessing folders, QC reports, host‑removal scripts, and environment setup files.\
+- Reorganized the repository to reflect a profiling‑first, R‑based workflow.\
+- Prepared for pivot away from command‑line tools.
+
+**2026-10-07 — Documentation Rebuild**\
+- Created project log and decision journal.\
+- Updated README to reflect curatedMetagenomicData workflow.\
+- Prepared to write project plan and begin Project B (cross‑sectional infant gut analysis).
+
+**2026-10-12 - Alpha Diversity & Git Fix**\
+- Generated richness and Shannon diversity plots for delivery mode, feeding practice, and antibiotics across birth, 4 months, and 12 months.
+- Reviewed delivery mode and feeding practice patterns side‑by‑side; identified expected early‑life trends and unexpected 12‑month feeding practice dynamics.
+- Deepened conceptual understanding of richness vs. Shannon, including how evenness and richness interact and why Shannon alone is ambiguous without examining richness (and later, composition) independently.
+- Troubleshot GitHub Desktop issue; identified .gitignore rule ignoring docs/ and restored tracking for .qmd files.
+- Prepared to examine antibiotics plots and begin drafting alpha diversity results narrative.
